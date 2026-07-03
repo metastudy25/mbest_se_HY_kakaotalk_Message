@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>엠베스트SE 하남예섬학원 · 카카오톡 메시지 발송</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f0f4fa; color: #1a1a1a; font-size: 14px; }
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── 사이드바 ── */
+  .sidebar { width: 210px; background: #fff; border-right: 1px solid #dde5f0; display: flex; flex-direction: column; flex-shrink: 0; }
+
+  /* 사이드바 브랜드 헤더 */
+  .sidebar-brand { padding: 14px 12px 12px; background: #003087; border-bottom: 1px solid #002070; }
+  .brand-logo { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+  .brand-m { width: 30px; height: 30px; background: #FEE500; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; color: #003087; flex-shrink: 0; font-style: italic; }
+  .brand-text { color: #fff; }
+  .brand-text .b1 { font-size: 12px; font-weight: 700; line-height: 1.2; }
+  .brand-text .b2 { font-size: 10px; color: #8ab0d8; line-height: 1.3; }
+  .sidebar-top-row { display: flex; gap: 4px; align-items: center; }
+  .search-wrap { position: relative; flex: 1; }
+  .search-wrap input { width: 100%; padding: 5px 8px 5px 24px; border: 1px solid #3a5a90; border-radius: 6px; font-size: 12px; background: #002070; color: #fff; outline: none; }
+  .search-wrap input::placeholder { color: #6a90c0; }
+  .search-wrap input:focus { border-color: #FEE500; background: #001850; }
+  .search-wrap::before { content: '🔍'; position: absolute; left: 6px; top: 50%; transform: translateY(-50%); font-size: 10px; }
+  .btn-refresh { padding: 5px 7px; border: 1px solid #3a5a90; border-radius: 6px; background: #002070; font-size: 13px; cursor: pointer; color: #8ab0d8; transition: all 0.15s; flex-shrink: 0; }
+  .btn-refresh:hover { background: #FEE500; color: #003087; border-color: #FEE500; }
+
+  .student-list { overflow-y: auto; flex: 1; padding: 6px 0; }
+  .student-group-label { font-size: 10px; font-weight: 700; color: #003087; padding: 8px 12px 3px; letter-spacing: 0.5px; background: #f5f8ff; border-bottom: 1px solid #e8eef8; }
+  .student-item { display: flex; align-items: center; gap: 7px; padding: 7px 12px; cursor: pointer; border-left: 3px solid transparent; transition: background 0.1s; }
+  .student-item:hover { background: #f0f4fa; }
+  .student-item.active { background: #e8f0ff; border-left-color: #003087; }
+  .student-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .student-name { font-size: 13px; font-weight: 500; color: #1a1a1a; }
+  .student-grade { font-size: 10px; color: #888; }
+  .sync-status { font-size: 10px; color: #8ab0d8; padding: 6px 12px; text-align: center; background: #f5f8ff; border-top: 1px solid #dde5f0; }
+
+  /* ── 메인 ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* 메인 상단 브랜드 배너 */
+  .main-brand-bar { background: #003087; padding: 8px 18px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .main-brand-bar .mbb-left { display: flex; align-items: center; gap: 8px; }
+  .mbb-badge { background: #FEE500; color: #003087; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 3px; letter-spacing: 0.3px; }
+  .mbb-name { color: #fff; font-size: 13px; font-weight: 600; }
+  .mbb-tel { color: #8ab0d8; font-size: 11px; }
+
+  .main-header { background: #fff; border-bottom: 1px solid #dde5f0; padding: 10px 18px; display: flex; align-items: center; gap: 10px; min-height: 52px; }
+  .sel-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .sel-info h1 { font-size: 15px; font-weight: 600; }
+  .sel-info p { font-size: 11px; color: #888; margin-top: 1px; }
+  .content { flex: 1; overflow-y: auto; padding: 14px 18px; }
+
+  /* ── 카테고리 탭 ── */
+  .category-tabs { display: flex; gap: 5px; margin-bottom: 14px; flex-wrap: wrap; }
+  .cat-tab { padding: 5px 11px; border-radius: 20px; border: 1px solid #c8d8ee; background: #fff; font-size: 12px; font-weight: 500; cursor: pointer; color: #555; transition: all 0.15s; white-space: nowrap; }
+  .cat-tab:hover { border-color: #003087; color: #003087; }
+  .cat-tab.active { background: #003087; border-color: #003087; color: #fff; font-weight: 700; }
+
+  /* ── 메시지 카드 ── */
+  .message-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .msg-card { background: #fff; border: 1px solid #dde5f0; border-radius: 10px; padding: 11px 13px; cursor: pointer; transition: all 0.15s; }
+  .msg-card:hover { border-color: #003087; background: #f0f4fa; }
+  .msg-card.selected { border-color: #003087; background: #e8f0ff; box-shadow: 0 0 0 2px #003087'22'; }
+  .msg-card-icon { font-size: 17px; margin-bottom: 3px; }
+  .msg-card-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; color: #1a1a1a; }
+  .msg-card-desc { font-size: 11px; color: #888; line-height: 1.4; }
+
+  /* ── 일일학습 다중 선택 ── */
+  .daily-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .daily-card { background: #fff; border: 1px solid #dde5f0; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all 0.15s; display: flex; align-items: flex-start; gap: 8px; }
+  .daily-card:hover { border-color: #003087; background: #f0f4fa; }
+  .daily-card.checked { border-color: #003087; background: #e8f0ff; box-shadow: 0 0 0 2px #00308720; }
+  .daily-checkbox { width: 17px; height: 17px; border: 2px solid #c8d8ee; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-size: 10px; transition: all 0.15s; }
+  .daily-card.checked .daily-checkbox { background: #003087; border-color: #003087; color: #fff; }
+  .daily-card-title { font-size: 13px; font-weight: 600; margin-bottom: 1px; }
+  .daily-card-desc { font-size: 11px; color: #888; }
+
+  /* ── 추가 입력 ── */
+  .extra-inputs { background: #fff; border: 1px solid #dde5f0; border-radius: 10px; padding: 13px; margin-top: 10px; }
+  .extra-inputs h3 { font-size: 11px; font-weight: 700; color: #003087; margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .input-row { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+  .input-row:last-child { margin-bottom: 0; }
+  .input-row label { font-size: 12px; color: #555; min-width: 80px; flex-shrink: 0; }
+  .input-row input, .input-row select { flex: 1; padding: 6px 9px; border: 1px solid #c8d8ee; border-radius: 6px; font-size: 13px; color: #1a1a1a; background: #f5f8ff; outline: none; min-width: 0; }
+  .input-row input:focus, .input-row select:focus { border-color: #003087; background: #fff; }
+
+  .time-row { display: flex; align-items: center; gap: 5px; flex: 1; }
+  .ampm-btn { padding: 5px 9px; border: 1px solid #c8d8ee; border-radius: 6px; background: #f5f8ff; font-size: 12px; font-weight: 500; cursor: pointer; color: #555; transition: all 0.15s; }
+  .ampm-btn.active { background: #003087; border-color: #003087; color: #fff; font-weight: 700; }
+  .time-input { padding: 6px 9px; border: 1px solid #c8d8ee; border-radius: 6px; font-size: 13px; color: #1a1a1a; background: #f5f8ff; outline: none; width: 68px; }
+  .time-input:focus { border-color: #003087; background: #fff; }
+
+  .status-row { display: flex; align-items: flex-start; gap: 7px; margin-bottom: 7px; }
+  .status-row label { font-size: 12px; color: #555; min-width: 80px; flex-shrink: 0; padding-top: 4px; }
+  .status-btns { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
+  .status-btn { padding: 4px 9px; border: 1px solid #c8d8ee; border-radius: 14px; background: #f5f8ff; font-size: 11px; cursor: pointer; color: #555; transition: all 0.15s; white-space: nowrap; }
+  .status-btn:hover { border-color: #003087; color: #003087; }
+  .status-btn.active { background: #003087; border-color: #003087; color: #fff; font-weight: 600; }
+
+  .hw-items { display: flex; flex-wrap: wrap; gap: 5px; flex: 1; }
+  .hw-chip { padding: 4px 9px; border: 1px solid #c8d8ee; border-radius: 14px; background: #f5f8ff; font-size: 11px; cursor: pointer; color: #555; transition: all 0.15s; white-space: nowrap; }
+  .hw-chip:hover { border-color: #003087; }
+  .hw-chip.active { background: #003087; border-color: #003087; color: #fff; font-weight: 600; }
+
+  .daily-status-block { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eef2f8; }
+  .daily-status-block:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .daily-status-label { font-size: 12px; font-weight: 600; color: #003087; margin-bottom: 5px; }
+
+  /* ── 알림톡 스타일 미리보기 ── */
+  .preview-section { margin-top: 12px; }
+  .preview-label { font-size: 11px; font-weight: 700; color: #003087; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase; }
+
+  /* 알림톡 카드 래퍼 */
+  .alimtalk-card { background: #fff; border: 1px solid #c8d8ee; border-radius: 12px; overflow: hidden; max-width: 340px; }
+  .alimtalk-header { background: #003087; padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+  .alimtalk-header-logo { width: 26px; height: 26px; background: #FEE500; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #003087; font-style: italic; flex-shrink: 0; }
+  .alimtalk-header-text { color: #fff; }
+  .alimtalk-header-text .ht1 { font-size: 12px; font-weight: 700; line-height: 1.2; }
+  .alimtalk-header-text .ht2 { font-size: 10px; color: #8ab0d8; }
+  .alimtalk-body { padding: 14px; }
+  .alimtalk-label { display: inline-block; background: #e8f0ff; color: #003087; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; margin-bottom: 8px; letter-spacing: 0.3px; }
+  .alimtalk-msg { font-size: 13px; line-height: 1.75; color: #1a1a1a; white-space: pre-wrap; word-break: break-all; }
+  .alimtalk-divider { height: 1px; background: #eef2f8; margin: 10px 0; }
+  .alimtalk-footer { font-size: 11px; color: #003087; font-weight: 600; }
+  .alimtalk-tel { font-size: 11px; color: #888; margin-top: 2px; }
+  .preview-time { font-size: 11px; color: #aaa; margin-top: 6px; }
+
+  /* ── 액션바 ── */
+  .action-bar { background: #fff; border-top: 1px solid #dde5f0; padding: 11px 18px; display: flex; gap: 8px; }
+  .btn-main-copy { flex: 1; padding: 11px; border: none; border-radius: 8px; background: #003087; font-size: 14px; font-weight: 700; cursor: pointer; color: #fff; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-main-copy:hover { background: #002070; }
+  .btn-main-copy:active { transform: scale(0.98); }
+  .btn-main-copy.copied { background: #2E7D32; }
+  /* 카카오 버튼 */
+  .btn-kakao-open { padding: 11px 14px; border: 1px solid #dde5f0; border-radius: 8px; background: #FEE500; font-size: 13px; font-weight: 700; cursor: pointer; color: #1a1a1a; transition: all 0.15s; flex-shrink: 0; }
+  .btn-kakao-open:hover { background: #FFD600; }
+
+  /* ── 히스토리 ── */
+  .history-panel { width: 220px; background: #fff; border-left: 1px solid #dde5f0; display: flex; flex-direction: column; flex-shrink: 0; }
+  .history-header { padding: 12px 12px 8px; border-bottom: 1px solid #dde5f0; font-size: 11px; font-weight: 700; color: #003087; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+  .history-clear { font-size: 11px; color: #ccc; cursor: pointer; font-weight: 400; }
+  .history-clear:hover { color: #888; }
+  .history-list { overflow-y: auto; flex: 1; }
+  .history-item { padding: 9px 12px; border-bottom: 1px solid #f0f4fa; cursor: pointer; }
+  .history-item:hover { background: #f5f8ff; }
+  .history-student { font-size: 12px; font-weight: 600; color: #003087; }
+  .history-msg { font-size: 11px; color: #999; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-ts { font-size: 10px; color: #ccc; margin-top: 2px; }
+  .history-recopy { font-size: 10px; color: #003087; margin-top: 2px; }
+
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #c8d8ee; text-align: center; gap: 8px; padding: 20px; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(16px); background: #003087; color: #fff; padding: 9px 18px; border-radius: 20px; font-size: 13px; opacity: 0; transition: all 0.22s; pointer-events: none; z-index: 9999; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  #copyTA { position: fixed; top: -9999px; left: -9999px; opacity: 0; width: 1px; height: 1px; }
+
+  @media (max-width: 900px) { .history-panel { display: none; } }
+  @media (max-width: 640px) { .sidebar { width: 170px; } .message-options, .daily-grid { grid-template-columns: 1fr; } .alimtalk-card { max-width: 100%; } }
+</style>
+</head>
+<body>
+<textarea id="copyTA" readonly></textarea>
+<div class="app">
+
+  <!-- 사이드바 -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <div class="brand-m">M</div>
+        <div class="brand-text">
+          <div class="b1">엠베스트SE학원</div>
+          <div class="b2">하남예섬점</div>
+        </div>
+      </div>
+      <div class="sidebar-top-row">
+        <div class="search-wrap">
+          <input type="text" id="searchInput" placeholder="이름 검색" oninput="filterStudents()">
+        </div>
+        <button class="btn-refresh" onclick="loadStudents()" title="명단 새로고침">↻</button>
+      </div>
+    </div>
+    <div class="student-list" id="studentList">
+      <div class="empty-state"><p style="font-size:12px;">불러오는 중...</p></div>
+    </div>
+    <div class="sync-status" id="syncStatus"></div>
+  </div>
+
+  <!-- 메인 -->
+  <div class="main">
+    <!-- 브랜드 배너 -->
+    <div class="main-brand-bar">
+      <div class="mbb-left">
+        <span class="mbb-badge">알림톡</span>
+        <span class="mbb-name">엠베스트SE학원 하남예섬점 · 카카오톡 메시지 발송</span>
+      </div>
+      <span class="mbb-tel">0507-1414-6112</span>
+    </div>
+
+    <div class="main-header" id="mainHeader">
+      <div style="display:flex;align-items:center;gap:10px;color:#c8d8ee;">
+        <span style="font-size:20px;">👈</span>
+        <span style="font-size:13px;color:#888;">학생을 선택하세요</span>
+      </div>
+    </div>
+
+    <div class="content" id="mainContent">
+      <div class="empty-state" style="padding-top:60px;">
+        <div style="font-size:36px;">💬</div>
+        <p style="color:#aaa;">학생을 선택하면<br>메시지를 작성할 수 있어요</p>
+      </div>
+    </div>
+
+    <div class="action-bar" id="actionBar" style="display:none;">
+      <button class="btn-kakao-open" onclick="openKakaoTalk()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#1a1a1a" style="vertical-align:-2px;margin-right:3px"><path d="M12 3C7.03 3 3 6.36 3 10.5c0 2.64 1.56 4.97 3.9 6.37L6 20.5l4.27-2.83c.57.08 1.15.13 1.73.13 4.97 0 9-3.36 9-7.5S16.97 3 12 3z"/></svg>
+        카카오톡
+      </button>
+      <button class="btn-main-copy" id="copyBtn" onclick="doCopy()">📋 메시지 복사하기</button>
+    </div>
+  </div>
+
+  <!-- 히스토리 -->
+  <div class="history-panel">
+    <div class="history-header">
+      발송 내역
+      <span class="history-clear" onclick="clearHistory()">지우기</span>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="empty-state"><p style="font-size:11px;">내역 없음</p></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────
+// 설정
+// ─────────────────────────────────────────
+const SHEET_ID = '1tOwzBefyhg60WgdOs8dKfu9GHwnVMma0T78JPuvC-Gs';
+const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+
+// 브랜드 정보
+const BRAND = {
+  name: '엠베스트SE학원 하남예섬점',
+  short: 'M베스트SE 하남예섬',
+  tel: '0507-1414-6112',
+  addr: '경기도 하남시 미사강변대로226번길 15 4층 404호',
+  sign: '엠베스트SE학원 하남예섬점 원장 황붕주 드림',
+};
+
+const COLORS = ['#1E88E5','#E53935','#43A047','#8E24AA','#F4511E','#00897B','#6D4C41','#1565C0','#AD1457','#00695C'];
+const GRADE_ORDER = ['N수','고3','고2','고1','중3','중2','중1'];
+
+// ─────────────────────────────────────────
+// 학생 명단
+// ─────────────────────────────────────────
+let STUDENTS = [];
+let filteredStudents = [];
+
+const FALLBACK_STUDENTS = [
+  {name:'고길동', grade:'중2'},
+];
+
+async function loadStudents() {
+  document.getElementById('syncStatus').textContent = '동기화 중...';
+  document.getElementById('studentList').innerHTML = '<div class="empty-state"><p style="font-size:12px;color:#aaa;">불러오는 중...</p></div>';
+  try {
+    const res = await fetch(SHEET_CSV_URL);
+    if (!res.ok) throw new Error();
+    const csv = await res.text();
+    const rows = csv.trim().split('\n').map(r=>r.split(',').map(c=>c.replace(/^"|"$/g,'').trim()));
+    STUDENTS = rows.slice(1).filter(r=>r[0]&&r[0]!=='이름').map(r=>({name:r[0],grade:r[1]||''}));
+    filteredStudents = [...STUDENTS];
+    document.getElementById('syncStatus').textContent = `${STUDENTS.length}명 · 방금 동기화`;
+    renderStudents(filteredStudents);
+  } catch(e) {
+    STUDENTS = FALLBACK_STUDENTS;
+    filteredStudents = [...STUDENTS];
+    document.getElementById('syncStatus').textContent = `오프라인 (${STUDENTS.length}명)`;
+    renderStudents(filteredStudents);
+  }
+}
+
+function filterStudents() {
+  const q = document.getElementById('searchInput').value.trim();
+  filteredStudents = q ? STUDENTS.filter(s=>s.name.includes(q)) : [...STUDENTS];
+  renderStudents(filteredStudents);
+}
+
+function getColor(name) {
+  let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))%COLORS.length; return COLORS[h];
+}
+
+function renderStudents(list) {
+  const el = document.getElementById('studentList');
+  if (!list.length) { el.innerHTML='<div class="empty-state"><p style="font-size:12px;color:#aaa;">검색 결과 없음</p></div>'; return; }
+  const grps={};
+  list.forEach(s=>{const g=s.grade||'기타'; if(!grps[g]) grps[g]=[]; grps[g].push(s);});
+  el.innerHTML = GRADE_ORDER.filter(g=>grps[g]).concat(Object.keys(grps).filter(g=>!GRADE_ORDER.includes(g))).map(g=>`
+    <div class="student-group-label">${g}</div>
+    ${grps[g].map(s=>`
+      <div class="student-item ${selectedStudent?.name===s.name?'active':''}" onclick="selectStudent('${s.name}')">
+        <div class="student-avatar" style="background:${getColor(s.name)}22;color:${getColor(s.name)}">${s.name[0]}</div>
+        <div><div class="student-name">${s.name}</div><div class="student-grade">${s.grade}</div></div>
+      </div>`).join('')}
+  `).join('');
+}
+
+// ─────────────────────────────────────────
+// 상태
+// ─────────────────────────────────────────
+let selectedStudent = null;
+let selectedCategory = 'attendance';
+let selectedMsgId = null;
+let ampm = (new Date().getHours()<12)?'오전':'오후';
+let timeVal = '';
+let earlyReason = '';
+let earlyReasonCustom = '';
+let dailyChecked = {};
+let hwChecked = {};
+let hwExtra = '';
+let extraMap = {};
+let historyLog = [];
+
+function selectStudent(name) {
+  selectedStudent = STUDENTS.find(s=>s.name===name)||{name,grade:''};
+  selectedMsgId=null; dailyChecked={}; hwChecked={}; hwExtra=''; extraMap={}; earlyReason=''; earlyReasonCustom=''; timeVal='';
+  ampm = (new Date().getHours()<12)?'오전':'오후';
+  renderStudents(filteredStudents);
+  renderMain();
+}
+
+// ─────────────────────────────────────────
+// 정의
+// ─────────────────────────────────────────
+const CATEGORIES = [
+  {id:'attendance',label:'📋 출결'},
+  {id:'daily',     label:'📒 일일 학습'},
+  {id:'attitude',  label:'🎯 학습 태도'},
+  {id:'homework',  label:'📝 과제'},
+  {id:'consult',   label:'💬 상담'},
+  {id:'notice',    label:'📢 공지'},
+];
+const ATTENDANCE_MSGS = [
+  {id:'not_arrived',icon:'⚠️',title:'미등원 알림',    desc:'예정 시간 초과 미등원'},
+  {id:'no_return',  icon:'🚶',title:'외출 후 미복귀', desc:'현재 시각 기준 미복귀'},
+  {id:'early_leave',icon:'🏃',title:'조기 퇴원',      desc:'사유 선택 포함'},
+  {id:'arrived',    icon:'✅',title:'정상 등원',      desc:'등원 시각 안내'},
+  {id:'leaved',     icon:'🌙',title:'정상 퇴원',      desc:'퇴원 시각 안내'},
+  {id:'absent',     icon:'❌',title:'무단 결석',      desc:'사전 연락 없이 미등원'},
+];
+const ATTITUDE_MSGS = [
+  {id:'att_excellent',icon:'⭐',title:'집중도 우수',   desc:'오늘 최고 학습 태도'},
+  {id:'att_normal',   icon:'👍',title:'집중도 보통',   desc:'평소 수준 학습'},
+  {id:'att_low',      icon:'⚠️',title:'집중도 저조',   desc:'사유 입력'},
+  {id:'att_sleep',    icon:'😴',title:'수면 부족·졸음',desc:'졸음 관찰됨'},
+  {id:'att_bad',      icon:'❌',title:'학습 태도 불량',desc:'전반적 태도 문제'},
+];
+const HOMEWORK_MSGS = [
+  {id:'hw_incomplete', icon:'📝',title:'과제 미완료',     desc:'항목 복수 선택'},
+  {id:'hw_accumulate', icon:'⚠️',title:'누적 과제 미완료',desc:'누적 미완료 항목'},
+  {id:'hw_complete',   icon:'✅',title:'과제 완료 우수',  desc:'오늘 모두 완료'},
+];
+const CONSULT_MSGS = [
+  {id:'c_study', icon:'📚',title:'학습 상담 요청',  desc:'학습 관련 상담'},
+  {id:'c_score', icon:'📊',title:'성적 관련 면담',  desc:'성적 이슈 상담'},
+  {id:'c_career',icon:'🎓',title:'진로·진학 상담',  desc:'입시 컨설팅 안내'},
+  {id:'c_visit', icon:'🏫',title:'학부모 내원 요청',desc:'직접 면담 요청'},
+];
+const NOTICE_MSGS = [
+  {id:'n_fee',    icon:'💳',title:'수강료 납부 안내',desc:'납부 기간 알림'},
+  {id:'n_lecture',icon:'📣',title:'특강 강좌 안내',  desc:'신규 특강·강좌 개설'},
+  {id:'n_closed', icon:'🏖️',title:'휴원 안내',       desc:'휴원일 고지'},
+  {id:'n_change', icon:'🔄',title:'일정 변경 안내',  desc:'수업 일정 변경'},
+];
+const DAILY_ITEMS = [
+  {key:'report',   icon:'📋',title:'1일 보고서',  desc:'제출 여부',  opts:['제출 완료 ✅','미제출 ⚠️','불성실 작성 📝']},
+  {key:'planner',  icon:'🗓️',title:'플래너',      desc:'작성 여부',  opts:['확인 완료 ✅','미작성 ⚠️','부실 작성 📝']},
+  {key:'word',     icon:'📖',title:'영단어 암기', desc:'확인/강수',  opts:['확인 완료 ✅','부분 완료 🔶','미이행 ⚠️'],hasNum:true},
+  {key:'kvoc',     icon:'✏️',title:'국어 어휘',   desc:'확인/강수',  opts:['확인 완료 ✅','부분 완료 🔶','미이행 ⚠️'],hasNum:true},
+  {key:'retrieval',icon:'🧠',title:'5분 인출 노트',desc:'작성 여부', opts:['확인 완료 ✅','미작성 ⚠️']},
+  {key:'sync',     icon:'🔄',title:'Eden_Sync',  desc:'동기화 여부',opts:['확인 완료 ✅','미이행 ⚠️']},
+];
+const HW_ITEMS = ['플래너','영어 단어','국어 어휘','5분 인출 노트','Eden_Sync','1일 보고서','수업 과제','엠베스트 강의'];
+const EARLY_REASONS = ['학원','학교 행사','병원','가족 모임','기타'];
+
+// ─────────────────────────────────────────
+// 렌더
+// ─────────────────────────────────────────
+function renderMain() {
+  if (!selectedStudent) return;
+  const s = selectedStudent;
+  document.getElementById('mainHeader').innerHTML = `
+    <div class="sel-avatar" style="background:${getColor(s.name)}22;color:${getColor(s.name)}">${s.name[0]}</div>
+    <div class="sel-info"><h1>${s.name}</h1><p>${s.grade}</p></div>`;
+
+  let html = `<div class="category-tabs">${CATEGORIES.map(c=>`
+    <div class="cat-tab ${selectedCategory===c.id?'active':''}" onclick="selectCat('${c.id}')">${c.label}</div>`).join('')}
+  </div>`;
+
+  const msgLists={attendance:ATTENDANCE_MSGS,attitude:ATTITUDE_MSGS,homework:HOMEWORK_MSGS,consult:CONSULT_MSGS,notice:NOTICE_MSGS};
+  if (selectedCategory==='daily') {
+    html+=`<div style="font-size:11px;color:#8ab0d8;margin-bottom:8px;">여러 항목을 동시에 선택해 한 번에 보낼 수 있어요</div>
+      <div class="daily-grid">${DAILY_ITEMS.map(d=>`
+        <div class="daily-card ${dailyChecked[d.key]?'checked':''}" onclick="toggleDaily('${d.key}')">
+          <div class="daily-checkbox">${dailyChecked[d.key]?'✓':''}</div>
+          <div><div class="daily-card-title">${d.icon} ${d.title}</div><div class="daily-card-desc">${d.desc}</div></div>
+        </div>`).join('')}
+      </div>`;
+  } else {
+    const list=msgLists[selectedCategory]||[];
+    html+=`<div class="message-options">${list.map(m=>`
+      <div class="msg-card ${selectedMsgId===m.id?'selected':''}" onclick="selectMsg('${m.id}')">
+        <div class="msg-card-icon">${m.icon}</div>
+        <div class="msg-card-title">${m.title}</div>
+        <div class="msg-card-desc">${m.desc}</div>
+      </div>`).join('')}</div>`;
+  }
+  html+=`<div id="extraSection"></div><div id="previewSection"></div>`;
+  document.getElementById('mainContent').innerHTML=html;
+  renderExtras();
+  renderPreview();
+}
+
+function selectCat(cat){selectedCategory=cat;selectedMsgId=null;dailyChecked={};hwChecked={};hwExtra='';extraMap={};earlyReason='';earlyReasonCustom='';timeVal='';renderMain();}
+function selectMsg(id){selectedMsgId=id;extraMap={};earlyReason='';earlyReasonCustom='';timeVal='';renderMain();}
+function toggleDaily(key){
+  if(dailyChecked[key]) delete dailyChecked[key]; else dailyChecked[key]={status:'',num:''};
+  selectedMsgId=Object.keys(dailyChecked).length?'daily_multi':null;
+  renderMain();
+}
+
+function renderExtras(){
+  const el=document.getElementById('extraSection'); if(!el) return;
+  const id=selectedMsgId; if(!id){el.innerHTML='';return;}
+
+  function timeBlock(label){
+    const ph=nowHHMM();
+    return `<div class="input-row"><label>${label}</label>
+      <div class="time-row">
+        <button class="ampm-btn ${ampm==='오전'?'active':''}" onclick="setAmpm('오전')">오전</button>
+        <button class="ampm-btn ${ampm==='오후'?'active':''}" onclick="setAmpm('오후')">오후</button>
+        <input class="time-input" type="text" placeholder="${ph}" value="${timeVal}" oninput="timeVal=this.value;renderPreview()">
+      </div></div>`;
+  }
+
+  let html='';
+  if(id==='not_arrived') html=`<div class="extra-inputs"><h3>추가 정보</h3>${timeBlock('현재 시각')}</div>`;
+  else if(id==='no_return') html=`<div class="extra-inputs"><h3>추가 정보</h3>${timeBlock('현재 시각')}</div>`;
+  else if(id==='early_leave'){
+    html=`<div class="extra-inputs"><h3>추가 정보</h3>${timeBlock('퇴원 시각')}
+      <div class="status-row"><label>퇴원 사유</label>
+        <div class="status-btns">${EARLY_REASONS.map(r=>`<span class="status-btn ${earlyReason===r?'active':''}" onclick="setEarlyReason('${r}')">${r}</span>`).join('')}</div>
+      </div>
+      ${earlyReason==='기타'?`<div class="input-row"><label>직접 입력</label><input type="text" placeholder="사유를 입력하세요" value="${earlyReasonCustom}" oninput="earlyReasonCustom=this.value;renderPreview()"></div>`:''}
+    </div>`;
+  }
+  else if(id==='arrived') html=`<div class="extra-inputs"><h3>추가 정보</h3>${timeBlock('등원 시각')}</div>`;
+  else if(id==='leaved') html=`<div class="extra-inputs"><h3>추가 정보</h3>${timeBlock('퇴원 시각')}</div>`;
+  else if(id==='daily_multi'){
+    const keys=Object.keys(dailyChecked);
+    if(keys.length){
+      html=`<div class="extra-inputs"><h3>선택 항목 상태 입력</h3>`;
+      keys.forEach(k=>{
+        const d=DAILY_ITEMS.find(x=>x.key===k); if(!d) return;
+        const cur=dailyChecked[k]||{};
+        html+=`<div class="daily-status-block">
+          <div class="daily-status-label">${d.icon} ${d.title}</div>
+          <div class="status-btns" style="margin-bottom:${d.hasNum?'5px':'0'}">${d.opts.map(o=>`
+            <span class="status-btn ${cur.status===o?'active':''}" onclick="setDailyStatus('${k}','${o}')">${o}</span>`).join('')}</div>
+          ${d.hasNum?`<div class="input-row" style="margin-top:4px"><label style="min-width:60px">강수</label>
+            <input type="number" min="0" max="99" placeholder="0" value="${cur.num||''}" oninput="setDailyNum('${k}',this.value)" style="max-width:60px">
+            <span style="font-size:12px;color:#888;margin-left:4px">강</span></div>`:''}
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+  }
+  else if(id==='att_low') html=`<div class="extra-inputs"><h3>추가 정보</h3>
+    <div class="input-row"><label>집중 저하 사유</label><input type="text" placeholder="예) 스마트폰 사용, 잡담" value="${extraMap['att_reason']||''}" oninput="setExtra('att_reason',this.value)"></div></div>`;
+  else if(id==='hw_incomplete'||id==='hw_accumulate'){
+    html=`<div class="extra-inputs"><h3>${id==='hw_accumulate'?'누적 미완료':'미완료'} 항목 선택</h3>
+      <div class="status-row"><label>항목</label>
+        <div class="hw-items">${HW_ITEMS.map(it=>`<span class="hw-chip ${hwChecked[it]?'active':''}" onclick="toggleHw('${it}')">${it}</span>`).join('')}</div>
+      </div>
+      <div class="input-row"><label>직접 추가</label><input type="text" placeholder="기타 항목 입력" value="${hwExtra}" oninput="hwExtra=this.value;renderPreview()"></div>
+    </div>`;
+  }
+  else if(id==='n_closed') html=`<div class="extra-inputs"><h3>추가 정보</h3>
+    <div class="input-row"><label>휴원 일자</label><input type="text" placeholder="예) 7월 5일(금)" value="${extraMap['n_date']||''}" oninput="setExtra('n_date',this.value)"></div></div>`;
+  else if(id==='n_change') html=`<div class="extra-inputs"><h3>추가 정보</h3>
+    <div class="input-row"><label>변경 내용</label><input type="text" placeholder="예) 7/10 수업이 7/11로 변경" value="${extraMap['n_change']||''}" oninput="setExtra('n_change',this.value)"></div></div>`;
+  else if(id==='n_fee') html=`<div class="extra-inputs"><h3>추가 정보</h3>
+    <div class="input-row"><label>납부 월</label><input type="text" placeholder="예) 7월" value="${extraMap['fee_month']||''}" oninput="setExtra('fee_month',this.value)" style="max-width:80px"></div>
+    <div class="input-row"><label>납부 기한</label><input type="text" placeholder="예) 7월 10일" value="${extraMap['fee_due']||''}" oninput="setExtra('fee_due',this.value)"></div></div>`;
+  else if(id==='n_lecture') html=`<div class="extra-inputs"><h3>추가 정보</h3>
+    <div class="input-row"><label>강좌명</label><input type="text" placeholder="예) 수능 영어 집중 특강" value="${extraMap['lec_name']||''}" oninput="setExtra('lec_name',this.value)"></div>
+    <div class="input-row"><label>대상</label><input type="text" placeholder="예) 고1·고2·고3" value="${extraMap['lec_target']||''}" oninput="setExtra('lec_target',this.value)"></div>
+    <div class="input-row"><label>기간·일정</label><input type="text" placeholder="예) 7월 28일 ~ 8월 22일" value="${extraMap['lec_period']||''}" oninput="setExtra('lec_period',this.value)"></div>
+    <div class="input-row"><label>특이사항</label><input type="text" placeholder="예) 선착순 20명 마감" value="${extraMap['lec_note']||''}" oninput="setExtra('lec_note',this.value)"></div>
+    </div>`;
+
+  el.innerHTML=html;
+  renderPreview();
+}
+
+function setAmpm(v){ampm=v;renderExtras();}
+function setEarlyReason(r){earlyReason=r;renderExtras();}
+function setDailyStatus(k,v){if(!dailyChecked[k])dailyChecked[k]={};dailyChecked[k].status=v;renderExtras();}
+function setDailyNum(k,v){if(!dailyChecked[k])dailyChecked[k]={};dailyChecked[k].num=v;renderPreview();}
+function setExtra(k,v){extraMap[k]=v;renderPreview();}
+function toggleHw(it){hwChecked[it]=!hwChecked[it];renderExtras();}
+
+function nowHHMM(){const d=new Date();const h=d.getHours()%12||12;const m=String(d.getMinutes()).padStart(2,'0');return `${h}:${m}`;}
+function fullTime(){return `${ampm} ${timeVal||nowHHMM()}`;}
+
+// ─────────────────────────────────────────
+// 메시지 생성
+// ─────────────────────────────────────────
+function buildMessage(){
+  if(!selectedStudent||!selectedMsgId) return '';
+  const n=selectedStudent.name; const t=fullTime();
+  const B=BRAND;
+
+  // 알림톡 포맷 헤더/푸터
+  const HDR = `[${B.name}]\n──────────────────`;
+  const FTR = `──────────────────\n📞 ${B.tel}\n📍 ${B.addr}`;
+
+  const msgs={
+    not_arrived: `${HDR}\n⚠️ 미등원 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 ${t} 현재까지 등원하지 않았습니다. 확인 부탁드립니다.\n\n${FTR}`,
+    no_return:   `${HDR}\n🚶 외출 후 미복귀 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 외출 후 ${t} 현재 아직 복귀하지 않았습니다. 확인 부탁드립니다.\n\n${FTR}`,
+    arrived:     `${HDR}\n✅ 등원 확인\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 ${t}에 정상 등원했습니다. 😊\n\n${B.sign}`,
+    leaved:      `${HDR}\n🌙 퇴원 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 ${t}에 귀가했습니다.\n오늘도 수고했습니다! 😊\n\n${B.sign}`,
+    absent:      `${HDR}\n❌ 무단 결석 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 오늘 사전 연락 없이 등원하지 않았습니다. 확인 부탁드립니다.\n\n${FTR}`,
+    att_excellent:`${HDR}\n⭐ 학습 태도 우수\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 오늘 집중도가 매우 우수했습니다! 내일도 이 모습 이어가길 기대합니다 😊\n\n${B.sign}`,
+    att_normal:  `${HDR}\n👍 학습 현황 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 오늘 평소와 비슷한 수준으로 학습했습니다. 내일은 조금 더 집중해서 마무리해 주길 기대합니다!\n\n${B.sign}`,
+    att_sleep:   `${HDR}\n😴 수면 부족 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 오늘 수면 부족으로 인한 졸음이 관찰되었습니다. 충분한 수면을 취할 수 있도록 가정에서 관심 부탁드립니다.\n\n${FTR}`,
+    att_bad:     `${HDR}\n❌ 학습 태도 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생의 오늘 학습 태도에 대해 말씀드릴 사항이 있습니다. 내원 또는 전화 상담을 부탁드립니다.\n\n${FTR}`,
+    hw_complete: `${HDR}\n✅ 과제 완료 우수\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 오늘 과제를 성실하게 모두 완료했습니다! 훌륭합니다 🎉\n\n${B.sign}`,
+    c_study:     `${HDR}\n📚 학습 상담 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생 학습 관련 상담을 드리고 싶습니다.\n편하신 시간에 연락 주시면 일정을 잡아드리겠습니다.\n\n${FTR}\n${B.sign}`,
+    c_score:     `${HDR}\n📊 성적 면담 요청\n\n안녕하세요, 학부모님.\n\n[${n}] 학생의 최근 성적에 대해 말씀 나눌 기회를 갖고 싶습니다.\n내원 또는 전화 상담 부탁드립니다.\n\n${FTR}\n${B.sign}`,
+    c_career:    `${HDR}\n🎓 진로·진학 상담 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생의 진로·진학 방향에 대해 상담을 제안드립니다.\n\n엠베스트SE 하남예섬에서는 학교 내신성적표와 모의고사 성적표를 바탕으로, 학생이 직접 정시·수시·논술·약술형 논술 준비 방향을 설계해 보는 과정을 진행합니다.\n\n📌 최대 6개 대학·전형 맞춤 분석\n📌 대학별 15쪽 분량 보고서 제공\n📌 준비 서류: 내신성적표, 모의고사 성적표\n\n편하신 시간에 연락 주시면 일정을 안내드리겠습니다.\n\n${FTR}\n${B.sign}`,
+    c_visit:     `${HDR}\n🏫 학부모 내원 요청\n\n안녕하세요, 학부모님.\n\n[${n}] 학생 관련하여 직접 면담을 요청드립니다.\n편하신 시간을 알려주시면 일정을 조율하겠습니다.\n\n${FTR}\n${B.sign}`,
+    n_closed:    `${HDR}\n🏖️ 휴원 안내\n\n안녕하세요, 학부모님.\n\n${extraMap['n_date']||'______'}에 휴원합니다.\n학습 일정에 참고하시기 바랍니다.\n\n${B.sign}\n${FTR}`,
+    n_change:    `${HDR}\n🔄 일정 변경 안내\n\n안녕하세요, 학부모님.\n\n${extraMap['n_change']||'______'}\n\n${B.sign}\n${FTR}`,
+    n_fee:       `${HDR}\n💳 수강료 납부 안내\n\n안녕하세요, 학부모님.\n\n${extraMap['fee_month']||'______'} 수강료 납부 기간(~${extraMap['fee_due']||'______'})이 다가왔습니다.\n아직 미납이시면 납부 부탁드립니다.\n\n${B.sign}\n${FTR}`,
+    n_lecture:   HDR+'\n📣 특강 강좌 안내\n\n안녕하세요, 학부모님.\n\n엠베스트SE학원 하남예섬점에서 새로운 특강 강좌를 안내드립니다!\n\n📌 강좌명: '+(extraMap['lec_name']||'______')+'\n📌 대상: '+(extraMap['lec_target']||'______')+'\n📌 기간·일정: '+(extraMap['lec_period']||'______')+(extraMap['lec_note']?'\n📌 안내: '+extraMap['lec_note']:'')+'\n\n자세한 내용은 안내문을 보내드리겠습니다.\n\n'+B.sign+'\n'+FTR,
+  };
+
+  if(selectedMsgId==='early_leave'){
+    const reason=earlyReason==='기타'?(earlyReasonCustom||'기타 사유'):(earlyReason||'______');
+    return `${HDR}\n🏃 조기 퇴원 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 ${t}에 조기 퇴원했습니다.\n사유: ${reason}\n\n${FTR}`;
+  }
+  if(selectedMsgId==='att_low'){
+    return `${HDR}\n⚠️ 학습 집중도 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생이 오늘 집중도가 다소 낮았습니다.\n사유: ${extraMap['att_reason']||'______'}\n\n가정에서도 한 말씀 부탁드립니다.\n\n${FTR}`;
+  }
+  if(selectedMsgId==='hw_incomplete'||selectedMsgId==='hw_accumulate'){
+    const items=[...Object.keys(hwChecked).filter(k=>hwChecked[k])];
+    if(hwExtra) items.push(hwExtra);
+    const itemStr=items.length?items.join(', '):'______';
+    const verb=selectedMsgId==='hw_accumulate'?'누적 미완료':'미완료';
+    return `${HDR}\n📝 과제 ${verb} 안내\n\n안녕하세요, 학부모님.\n\n[${n}] 학생의 과제 ${verb} 항목을 안내드립니다.\n\n미완료 항목: ${itemStr}\n\n내일까지 완료할 수 있도록 확인 부탁드립니다.\n\n${FTR}`;
+  }
+  if(selectedMsgId==='daily_multi'){
+    const keys=Object.keys(dailyChecked);
+    if(!keys.length) return '';
+    const lines=keys.map(k=>{
+      const d=DAILY_ITEMS.find(x=>x.key===k); const cur=dailyChecked[k]||{};
+      let st=cur.status||'______';
+      if(d?.hasNum&&cur.num) st=`${cur.num}강 학습`;
+      return `${d?.icon||''} ${d?.title||k}: ${st}`;
+    }).join('\n');
+    return `${HDR}\n📒 일일 학습 현황\n\n안녕하세요, 학부모님.\n\n[${n}] 학생의 오늘 학습 현황을 안내드립니다.\n\n${lines}\n\n${B.sign}`;
+  }
+  return msgs[selectedMsgId]||'';
+}
+
+// ─────────────────────────────────────────
+// 알림톡 스타일 미리보기
+// ─────────────────────────────────────────
+function renderPreview(){
+  const el=document.getElementById('previewSection'); if(!el) return;
+  const msg=buildMessage();
+  if(!msg){el.innerHTML='';document.getElementById('actionBar').style.display='none';return;}
+
+  // 메시지에서 헤더·타이틀 추출
+  const lines=msg.split('\n');
+  const titleLine=lines[1]||'';
+  const bodyLines=lines.slice(2).join('\n').trim();
+
+  const now=new Date().toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  el.innerHTML=`<div class="preview-section">
+    <div class="preview-label" style="margin-top:14px">알림톡 미리보기</div>
+    <div class="alimtalk-card">
+      <div class="alimtalk-header">
+        <div class="alimtalk-header-logo">M</div>
+        <div class="alimtalk-header-text">
+          <div class="ht1">엠베스트SE학원 하남예섬점</div>
+          <div class="ht2">카카오톡 알림</div>
+        </div>
+      </div>
+      <div class="alimtalk-body">
+        <div class="alimtalk-label">${titleLine}</div>
+        <div class="alimtalk-msg">${bodyLines.replace(/\n/g,'<br>')}</div>
+        <div class="alimtalk-divider"></div>
+        <div class="alimtalk-footer">📞 0507-1414-6112</div>
+        <div class="alimtalk-tel">경기도 하남시 미사강변대로226번길 15 4층 404호</div>
+      </div>
+    </div>
+    <div class="preview-time">${now}</div>
+  </div>`;
+  document.getElementById('actionBar').style.display='flex';
+}
+
+// ─────────────────────────────────────────
+// 복사
+// ─────────────────────────────────────────
+function doCopy(){
+  const msg=buildMessage();
+  if(!msg){showToast('메시지 유형과 내용을 먼저 선택하세요');return;}
+  const ta=document.getElementById('copyTA');
+  ta.value=msg; ta.style.position='fixed'; ta.style.top='0'; ta.style.left='0'; ta.style.opacity='0';
+  ta.removeAttribute('readonly'); ta.focus(); ta.select();
+  let ok=false; try{ok=document.execCommand('copy');}catch(e){}
+  ta.setAttribute('readonly',''); ta.style.top='-9999px'; ta.style.left='-9999px';
+  if(!ok&&navigator.clipboard){navigator.clipboard.writeText(msg).then(()=>onCopySuccess(msg)).catch(onCopyFail);return;}
+  if(ok) onCopySuccess(msg); else onCopyFail();
+}
+
+function openKakaoTalk(){
+  doCopy();
+  setTimeout(()=>{ try{window.location.href='kakaotalk://';}catch(e){} },400);
+}
+
+function onCopySuccess(msg){
+  addHistory(msg);
+  const btn=document.getElementById('copyBtn');
+  btn.textContent='✅ 복사됐어요! 카카오톡에 붙여넣기 하세요';
+  btn.classList.add('copied');
+  showToast('✅ 복사 완료! 카카오톡을 열어 붙여넣기 하세요.',3000);
+  setTimeout(()=>{btn.textContent='📋 메시지 복사하기';btn.classList.remove('copied');},3000);
+}
+function onCopyFail(){
+  showToast('📌 노란 메시지를 길게 눌러 복사하세요',4000);
+  const bubble=document.querySelector('.alimtalk-msg');
+  if(bubble){bubble.style.userSelect='all';const r=document.createRange();r.selectNodeContents(bubble);const s=window.getSelection();s.removeAllRanges();s.addRange(r);}
+}
+
+// ─────────────────────────────────────────
+// 히스토리
+// ─────────────────────────────────────────
+function addHistory(msg){
+  historyLog.unshift({student:selectedStudent.name,grade:selectedStudent.grade,msg,time:new Date().toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})});
+  if(historyLog.length>30) historyLog.pop();
+  renderHistory();
+}
+function renderHistory(){
+  const el=document.getElementById('historyList');
+  if(!historyLog.length){el.innerHTML='<div class="empty-state"><p style="font-size:11px;">내역 없음</p></div>';return;}
+  el.innerHTML=historyLog.map((h,i)=>`
+    <div class="history-item" onclick="recopy(${i})">
+      <div class="history-student">${h.student} <span style="color:#ccc;font-size:10px;font-weight:400">${h.grade}</span></div>
+      <div class="history-msg">${h.msg.replace(/\n/g,' ')}</div>
+      <div class="history-ts">${h.time}</div>
+      <div class="history-recopy">탭하면 다시 복사</div>
+    </div>`).join('');
+}
+function recopy(i){
+  const ta=document.getElementById('copyTA');
+  ta.value=historyLog[i].msg;ta.style.position='fixed';ta.style.top='0';ta.style.left='0';ta.style.opacity='0';
+  ta.removeAttribute('readonly');ta.focus();ta.select();
+  let ok=false;try{ok=document.execCommand('copy');}catch(e){}
+  ta.setAttribute('readonly','');ta.style.top='-9999px';ta.style.left='-9999px';
+  if(!ok&&navigator.clipboard) navigator.clipboard.writeText(historyLog[i].msg).catch(()=>{});
+  showToast('✅ 이전 메시지 다시 복사했습니다');
+}
+function clearHistory(){historyLog=[];renderHistory();}
+
+function showToast(msg,dur=2500){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+loadStudents();
+renderHistory();
+</script>
+</body>
+</html>
